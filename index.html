@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Paint Holding With Pokemon</title>
+  </head>
+  <body>
+    <!-- Set visibility: hidden to prevent a paint -->
+    <div id="app" style="visibility: hidden; max-width: 400px; margin: auto">
+      <h1 style="background-color: red; padding: 16px; color: white">
+        Paint Holding With Pokemon
+      </h1>
+      <div id="page">
+        <p>
+          This is a Pokedex implemented to demonstrate
+          <a href="https://developer.chrome.com/blog/paint-holding/"
+            >paint holding</a
+          >, which should prevent browsers from triggering a white flash when
+          doing hard navigation. In Chrome, whenever a page takes less than
+          500ms to paint, it will show the old page on the screen until the new
+          page is ready. This prevents the white flash.
+        </p>
+        <div>
+          Here are some Pokemon:
+          <ul>
+            <li><a href="?pokemon=bulbasaur">Bulbasaur</a></li>
+            <li><a href="?pokemon=charizard">Charizard</a></li>
+            <li><a href="?pokemon=pikachu">Pikachu</a></li>
+          </ul>
+        </div>
+        <div id="data" style="background-color: lightblue; padding: 16px">
+          <h2 id="pokemon-name"></h2>
+          <p id="pokemon-types"></p>
+          <p id="pokemon-moves"></p>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      // We delay the first contentful paint until our page is ready.
+      function setLoaded() {
+        document.getElementById("app").style.visibility = "visible";
+      }
+
+      // Sometimes, the Pokemon API is so fast that it doesn't trigger a white flash.
+      // Therefore, we artificially delay it a bit.
+      function simulateSlowness() {
+        return new Promise((resolve) => setTimeout(resolve, 300));
+      }
+
+      async function getPokemonData(pokemon) {
+        const [response, _] = await Promise.all([
+          fetch("https://pokeapi.co/api/v2/pokemon/" + pokemon),
+          simulateSlowness(),
+        ]);
+        return await response.json();
+      }
+
+      const queryParams = new URLSearchParams(window.location.search);
+      if (queryParams.has("pokemon")) {
+        const pokemon = queryParams.get("pokemon");
+
+        const data = await getPokemonData(pokemon);
+
+        document.getElementById("pokemon-name").innerText = data.name;
+        document.getElementById("pokemon-types").innerText =
+          "Type: " + data.types.map((entry) => entry.type.name).join(", ");
+        document.getElementById("pokemon-moves").innerText =
+          "Moves: " + data.moves.map((entry) => entry.move.name).join(", ");
+        setLoaded();
+      } else {
+        setLoaded();
+      }
+    </script>
+  </body>
+</html>
